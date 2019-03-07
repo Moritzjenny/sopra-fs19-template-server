@@ -2,6 +2,10 @@ package ch.uzh.ifi.seal.soprafs19.service;
 
 import ch.uzh.ifi.seal.soprafs19.constant.UserStatus;
 import ch.uzh.ifi.seal.soprafs19.entity.User;
+import ch.uzh.ifi.seal.soprafs19.exceptions.UserExistingException;
+import ch.uzh.ifi.seal.soprafs19.exceptions.UserNotFoundException;
+import ch.uzh.ifi.seal.soprafs19.exceptions.PasswordNotValidException;
+
 import ch.uzh.ifi.seal.soprafs19.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Calendar;
 import java.util.UUID;
 
 @Service
@@ -29,11 +34,44 @@ public class UserService {
         return this.userRepository.findAll();
     }
 
+    public String loginUser(String username, String password) {
+        User temp = this.userRepository.findByUsername(username);
+        if (temp == null) throw new UserNotFoundException(username);
+        if (temp.getPassword().equals(password)) {
+            temp.setStatus(UserStatus.ONLINE);
+            temp.setToken(UUID.randomUUID().toString());
+            log.debug("User {} logged in!", username);
+            return temp.getToken();
+        }
+        else throw new PasswordNotValidException(username);
+    }
+
+    public String logoutUser(String token) {
+        User temp = this.userRepository.findByToken(token);
+        if (temp == null) {
+            throw new AuthenticationException("Token invalid");
+        }
+        temp.setStatus(UserStatus.OFFLINE);
+        temp.setToken(null);
+        return "logout successful!";
+    }
+
     public User createUser(User newUser) {
-        newUser.setToken(UUID.randomUUID().toString());
-        newUser.setStatus(UserStatus.ONLINE);
+        if (userRepository.findByUsername(newUser.getUsername()) != null) throw new UserExistingException(newUser.getUsername());
+        newUser.setStatus(UserStatus.OFFLINE);
+        Calendar today = Calendar.getInstance();
+        newUser.setCreationDate(today.getTime());
         userRepository.save(newUser);
         log.debug("Created Information for User: {}", newUser);
         return newUser;
+    }
+
+    public User getUser(String username) {
+        User temp = this.userRepository.findByUsername(username);
+        if (temp == null) throw new UserNotFoundException("User not found!");
+        return temp;
+    }
+    public Boolean validateToken(String token) {
+        return this.userRepository.findByToken(token) != null;
     }
 }
