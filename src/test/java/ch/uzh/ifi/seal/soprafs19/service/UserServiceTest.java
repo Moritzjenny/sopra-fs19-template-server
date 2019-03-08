@@ -14,6 +14,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
+import java.util.Date;
+
 /**
  * Test class for the UserResource REST resource.
  *
@@ -39,6 +41,8 @@ public class UserServiceTest {
         User testUser = new User();
         testUser.setName("testName");
         testUser.setUsername("testUsername");
+        testUser.setPassword("1234");
+        testUser.setBirthday(new Date());
 
         User createdUser = userService.createUser(testUser);
 

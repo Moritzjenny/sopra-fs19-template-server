@@ -1,78 +1,63 @@
-package ch.uzh.ifi.seal.soprafs19.service;
-
-import ch.uzh.ifi.seal.soprafs19.constant.UserStatus;
-import ch.uzh.ifi.seal.soprafs19.entity.User;
-import ch.uzh.ifi.seal.soprafs19.exceptions.AuthenticationException;
-import ch.uzh.ifi.seal.soprafs19.exceptions.UserExistingException;
-import ch.uzh.ifi.seal.soprafs19.exceptions.UserNotFoundException;
-import ch.uzh.ifi.seal.soprafs19.exceptions.PasswordNotValidException;
-
-import ch.uzh.ifi.seal.soprafs19.repository.UserRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Calendar;
-import java.util.UUID;
-
-@Service
-@Transactional
-public class UserService {
-
-    private final Logger log = LoggerFactory.getLogger(UserService.class);
-
-    private final UserRepository userRepository;
-
-
-    @Autowired
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+buildscript {
+    repositories {
+        mavenCentral()
     }
-
-    public Iterable<User> getUsers() {
-        return this.userRepository.findAll();
-    }
-
-    public String loginUser(String username, String password) {
-        User temp = this.userRepository.findByUsername(username);
-        if (temp == null) throw new UserNotFoundException(username);
-        if (temp.getPassword().equals(password)) {
-            temp.setStatus(UserStatus.ONLINE);
-            temp.setToken(UUID.randomUUID().toString());
-            log.debug("User {} logged in!", username);
-            return temp.getToken();
-        }
-        else throw new PasswordNotValidException(username);
-    }
-
-    public String logoutUser(String token) {
-        User temp = this.userRepository.findByToken(token);
-        if (temp == null) {
-            throw new AuthenticationException("Token invalid");
-        }
-        temp.setStatus(UserStatus.OFFLINE);
-        temp.setToken(null);
-        return "logout successful!";
-    }
-
-    public User createUser(User newUser) {
-        if (userRepository.findByUsername(newUser.getUsername()) != null) throw new UserExistingException(newUser.getUsername());
-        newUser.setStatus(UserStatus.OFFLINE);
-        Calendar today = Calendar.getInstance();
-        newUser.setCreationDate(today.getTime());
-        userRepository.save(newUser);
-        log.debug("Created Information for User: {}", newUser);
-        return newUser;
-    }
-
-    public User getUser(String username) {
-        User temp = this.userRepository.findByUsername(username);
-        if (temp == null) throw new UserNotFoundException("User not found!");
-        return temp;
-    }
-    public Boolean validateToken(String token) {
-        return this.userRepository.findByToken(token) != null;
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.1.0.RELEASE")
+        classpath("org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.7")
     }
 }
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'org.sonarqube'
+apply plugin: "jacoco"
+apply plugin: 'io.spring.dependency-management'
+
+bootJar {
+    baseName = 'gs-spring-boot'
+    version =  '0.1.0'
+}
+
+jacoco {
+    toolVersion = "0.8.2"
+    reportsDir = file("$buildDir/customJacocoReportDir")
+}
+
+group 'ch.uzh.ifi.seal'
+version '1.0.0'
+
+sourceCompatibility = 1.11
+
+repositories {
+    mavenCentral()
+}
+
+springBoot {
+    mainClassName = 'ch.uzh.ifi.seal.soprafs19.Application'
+}
+
+dependencies {
+    compile('org.springframework.boot:spring-boot-starter-data-jpa')
+    compile("org.springframework.boot:spring-boot-starter-web")
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+    runtime('com.h2database:h2')
+}
+
+test {
+    testLogging.showStandardStreams = true
+    maxParallelForks = 1
+}
+
+jacocoTestReport {
+    group = "Reporting"
+    reports {
+        xml.enabled true
+        csv.enabled false
+        html.destination file("${buildDir}/jacocoHtml")
+    }
+}
+
+defaultTasks 'bootJar', 'build'
