@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -35,12 +36,34 @@ public class UserService {
         return this.userRepository.findByUsername(username);
     }
 
+    public User getUserByToken(String token){
+        return this.userRepository.findByToken(token);
+    }
+
+    public User getUserById(Long id){
+        Optional<User> user = this.userRepository.findById(id);
+        if (user.isPresent()) {
+            return user.get();
+        }
+        return null;
+    }
+
+    public void loginUser(User user) {
+        user.setStatus(UserStatus.ONLINE);
+        userRepository.save(user);
+    }
+
+    public void logoutUser(User user) {
+        user.setStatus(UserStatus.OFFLINE);
+        userRepository.save(user);
+    }
+
     public User createUser(User newUser) {
         newUser.setToken(UUID.randomUUID().toString());
-        newUser.setStatus(UserStatus.ONLINE);
         newUser.setCreationDate(new Date());
+        newUser.setStatus(UserStatus.OFFLINE);
         userRepository.save(newUser);
-        log.debug("Created Information for User: {}", newUser);
+        System.out.println("Created Information for User: " + newUser);
         return newUser;
     }
 }
