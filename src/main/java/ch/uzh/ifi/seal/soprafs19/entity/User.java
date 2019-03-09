@@ -19,10 +19,10 @@ public class User implements Serializable {
 	@Id
 	@GeneratedValue
 	private Long id;
-	
-	@Column(nullable = false) 
+
+	@Column(nullable = false)
 	private String name;
-	
+
 	@Column(nullable = false, unique = true)
 	private String username;
 
@@ -31,7 +31,7 @@ public class User implements Serializable {
 	private String password;
 
 
-	@Column(nullable = false, unique = true) 
+	@Column(nullable = false, unique = true)
 	private String token;
 
 	@Column(nullable = false)
