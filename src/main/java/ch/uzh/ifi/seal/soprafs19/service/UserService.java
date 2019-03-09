@@ -50,6 +50,7 @@ public class UserService {
     }
 
     public void loginUser(User user) {
+        user.setToken(UUID.randomUUID().toString());
         user.setStatus(UserStatus.ONLINE);
         userRepository.save(user);
     }
