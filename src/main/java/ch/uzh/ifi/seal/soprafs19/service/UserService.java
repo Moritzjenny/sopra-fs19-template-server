@@ -2,7 +2,6 @@ package ch.uzh.ifi.seal.soprafs19.service;
 
 import ch.uzh.ifi.seal.soprafs19.constant.UserStatus;
 import ch.uzh.ifi.seal.soprafs19.entity.User;
-import ch.uzh.ifi.seal.soprafs19.entity.UserUpdate;
 import ch.uzh.ifi.seal.soprafs19.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +49,6 @@ public class UserService {
     }
 
     public void loginUser(User user) {
-        user.setToken(UUID.randomUUID().toString());
         user.setStatus(UserStatus.ONLINE);
         userRepository.save(user);
     }

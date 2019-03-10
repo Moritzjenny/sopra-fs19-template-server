@@ -1,15 +1,14 @@
 package ch.uzh.ifi.seal.soprafs19.controller;
 
 import ch.uzh.ifi.seal.soprafs19.entity.User;
-import ch.uzh.ifi.seal.soprafs19.entity.UserUpdate;
 import ch.uzh.ifi.seal.soprafs19.exceptions.AuthenticationException;
 import ch.uzh.ifi.seal.soprafs19.exceptions.ConflictException;
 import ch.uzh.ifi.seal.soprafs19.exceptions.NotFoundException;
 import ch.uzh.ifi.seal.soprafs19.service.UserService;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 public class UserController {
@@ -40,13 +39,15 @@ public class UserController {
         throw new AuthenticationException("wrong password for user " + username);
     }
 
-    @GetMapping("/users/{username}/logout")
-    void logout(@PathVariable String username, @RequestParam String token) {
-        User user = service.getUser(username);
+    @GetMapping("/users/{id}/logout")
+    void logout(@PathVariable long id, @RequestParam String token) {
+        User user = service.getUserById(id);
         if (user != null && user.getToken().equals(token)) {
             service.logoutUser(user);
+            return;
         }
-        throw new AuthenticationException("wrong token for user " + username);
+        System.out.println("halo i bims");
+        throw new AuthenticationException("wrong token for user with id " + id);
     }
 
     @GetMapping("/users/{id}")
@@ -64,25 +65,26 @@ public class UserController {
 
 
     @PostMapping("/users")
-    User createUser(@RequestBody User newUser) {
+    ResponseEntity<User> createUser(@RequestBody User newUser) {
         User user = service.getUser(newUser.getUsername());
         if (user != null){
             throw new ConflictException("add User failed because username already exists");
         }
-        return this.service.createUser(newUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.service.createUser(newUser));
     }
 
-    @PostMapping("/users/{id}")
-    ResponseEntity updateUser(@RequestBody User newUser, @PathVariable Long id, @RequestParam String token) {
-        System.out.println("asdfasdfasdfasdf" + newUser.getUsername());
-        User user = service.getUserById(id);
-        if (user == null){
-            throw new ConflictException("User doesn't exist");
-        }
-        System.out.println(newUser.getUsername());
-        this.service.updateUser(user, newUser);
 
-        HttpHeaders headers = new HttpHeaders();
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).headers(headers).build();
+    @CrossOrigin
+    @PutMapping("/users/{id}")
+    ResponseEntity updateUser(@RequestBody User newUser, @PathVariable long id, @RequestParam String token) {
+        User user = service.getUserById(id);
+        User tokenCheck = service.getUserByToken(token);
+        if (user == null){
+            throw new NotFoundException("user with userId: "+ id + " was not found");
+        } else if (!user.getToken().equals(tokenCheck.getToken())) {
+            throw new AuthenticationException("Invalid token " + token);
+        }
+        this.service.updateUser(user, newUser);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
