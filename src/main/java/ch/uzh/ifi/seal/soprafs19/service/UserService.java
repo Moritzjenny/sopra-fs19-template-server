@@ -2,6 +2,8 @@ package ch.uzh.ifi.seal.soprafs19.service;
 
 import ch.uzh.ifi.seal.soprafs19.constant.UserStatus;
 import ch.uzh.ifi.seal.soprafs19.entity.User;
+import ch.uzh.ifi.seal.soprafs19.exceptions.AuthenticationException;
+import ch.uzh.ifi.seal.soprafs19.exceptions.NotFoundException;
 import ch.uzh.ifi.seal.soprafs19.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +47,7 @@ public class UserService {
         if (user.isPresent()) {
             return user.get();
         }
-        return null;
+        throw new NotFoundException("invalid id " + id);
     }
 
     public void loginUser(User user) {
