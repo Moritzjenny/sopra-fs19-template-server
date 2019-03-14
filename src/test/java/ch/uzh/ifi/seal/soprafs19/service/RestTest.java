@@ -1,18 +1,13 @@
 package ch.uzh.ifi.seal.soprafs19.service;
 
-import ch.uzh.ifi.seal.soprafs19.constant.UserStatus;
 import ch.uzh.ifi.seal.soprafs19.entity.User;
-import ch.uzh.ifi.seal.soprafs19.exceptions.ConflictException;
-import net.minidev.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.json.JsonParser;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.test.json.JsonContent;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
@@ -111,15 +106,15 @@ public class RestTest {
 
         testUser1 = restTemplate.postForEntity(getBaseUrl() + "/users", testUser1, User.class).getBody();
 
-        User testUser = new User();
-        testUser.setName("testName");
-        testUser.setUsername("otherUsername");
-        testUser.setPassword("1234");
-        testUser.setBirthday(new Date());
+        User userUpdate = new User();
+        userUpdate.setName("testName");
+        userUpdate.setUsername("otherUsername");
+        userUpdate.setPassword("1234");
+        userUpdate.setBirthday(new Date());
 
-        restTemplate.put(getBaseUrl() + "/users/" + testUser1.getId() + "?token=" + testUser1.getToken(), User.class);
+        restTemplate.put(getBaseUrl() + "/users/" + testUser1.getId() + "?token=" + testUser1.getToken(), userUpdate, User.class);
 
         testUser1 = restTemplate.getForEntity(getBaseUrl() + "/users/" + testUser1.getId() + "?token=" + testUser1.getToken(), User.class).getBody();
-        Assert.assertSame(testUser1.getUsername(), testUser.getUsername());
+        Assert.assertEquals(testUser1.getUsername(), userUpdate.getUsername());
     }
 }
