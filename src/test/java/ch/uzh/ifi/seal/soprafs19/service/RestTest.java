@@ -117,4 +117,27 @@ public class RestTest {
         testUser1 = restTemplate.getForEntity(getBaseUrl() + "/users/" + testUser1.getId() + "?token=" + testUser1.getToken(), User.class).getBody();
         Assert.assertEquals(testUser1.getUsername(), userUpdate.getUsername());
     }
+
+    @Test
+    public void updateUserProfileWithInvalidId() {
+        User testUser1 = new User();
+        testUser1.setName("testName");
+        testUser1.setUsername("testUsername");
+        testUser1.setPassword("1234");
+        testUser1.setBirthday(new Date());
+
+        testUser1 = restTemplate.postForEntity(getBaseUrl() + "/users", testUser1, User.class).getBody();
+
+        User userUpdate = new User();
+        userUpdate.setName("testName");
+        userUpdate.setUsername("otherUsername");
+        userUpdate.setPassword("1234");
+        userUpdate.setBirthday(new Date());
+
+        restTemplate.put(getBaseUrl() + "/users/" + "37286" + "?token=" + testUser1.getToken(), userUpdate, User.class);
+
+        ResponseEntity<Object> response = restTemplate.getForEntity(getBaseUrl() + "/users/" + "345" + "?token=" + testUser1.getToken(), Object.class);
+        Assert.assertSame(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
 }
